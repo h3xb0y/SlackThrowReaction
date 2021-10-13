@@ -38,7 +38,8 @@ namespace SlackThrowReaction.Controllers
         throw new Exception("No action from response payload");
 
       var action = payload.Actions.First();
-      var imageUrl = action.Value;
+      var imageDataJson = action.Value;
+      var imageData = JsonConvert.DeserializeObject<ImageData>(imageDataJson);
 
       object response = null;
 
@@ -56,11 +57,11 @@ namespace SlackThrowReaction.Controllers
               title = new
               {
                 type = "plain_text",
-                text = $"{payload.User.Name} reacts as KEKW"
+                text = $"{payload.User.Name} reacts as {imageData.Emoji}"
               },
               block_id = "image4",
-              image_url = imageUrl,
-              alt_text = $"{payload.User.Name} reacts as KEKW"
+              image_url = imageData.IconUrl,
+              alt_text = $"{payload.User.Name} reacts as {imageData.Emoji}"
             }
           }
         };
@@ -74,17 +75,74 @@ namespace SlackThrowReaction.Controllers
       }
       else if (action.ActionId == ActionType.Shuffle.ToString())
       {
+        GetRandomEmojiController._emojiesByText.TryGetValue(imageData.SearchingEmoji, out var emojies);
+        var index = GetRandomEmojiController._random.Next(emojies.Count);
+        var emojiInfo = emojies[index];
+        var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
+        imageData.Emoji = emojiInfo.Code;
+        imageData.IconUrl = imageUrl;
+        imageDataJson = JsonConvert.SerializeObject(imageData);
+        
         response = new
         {
           text = "emojiInfo.Code",
           replace_original = "true",
-          blocks = new[]
+          blocks = new object[]
           {
             new
             {
+              type = "actions",
+              elements = new object[]
+              {
+                new
+                {
+                  type = "button",
+                  style = "primary",
+                  text = new
+                  {
+                    type = "plain_text",
+                    text = "Send"
+                  },
+                  value = imageDataJson,
+                  action_id = ActionType.Send.ToString()
+                },
+                new
+                {
+                  type = "button",
+                  style = "primary",
+                  text = new
+                  {
+                    type = "plain_text",
+                    text = "Shuffle"
+                  },
+                  value = imageDataJson,
+                  action_id = ActionType.Shuffle.ToString()
+                },
+                new
+                {
+                  type = "button",
+                  style = "danger",
+                  text = new
+                  {
+                    type = "plain_text",
+                    text = "Cancel"
+                  },
+                  value = imageDataJson,
+                  action_id = ActionType.Remove.ToString()
+                }
+              }
+            },
+            new
+            {
               type = "image",
+              title = new
+              {
+                type = "plain_text",
+                text = imageData.Emoji
+              },
+              block_id = "image4",
               image_url = imageUrl,
-              alt_text = "images"
+              alt_text = imageData.Emoji
             }
           }
         };

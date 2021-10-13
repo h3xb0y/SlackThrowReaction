@@ -49,6 +49,15 @@ namespace SlackThrowReaction.Model
     [JsonProperty("value")] public string Value { get; set; }
   }
 
+  public sealed class ImageData
+  {
+    [JsonProperty("emoji")] public string Emoji { get; set; }
+    
+    [JsonProperty("searchemoji")] public string SearchingEmoji { get; set; }
+    
+    [JsonProperty("url")] public string IconUrl { get; set; }
+  }
+
   public sealed class User
   {
     [JsonProperty("id")]
