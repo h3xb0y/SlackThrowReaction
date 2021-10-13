@@ -14,15 +14,15 @@ namespace SlackThrowReaction.Controllers
 {
   [ApiController]
   [Route("[controller]")]
-  public class ThrowController : ControllerBase
+  public class GetRandomEmojiController : ControllerBase
   {
-    private readonly ILogger<ThrowController> _logger;
+    private readonly ILogger<GetRandomEmojiController> _logger;
     private static readonly Random _random = new Random();
 
-    private static readonly Dictionary<string, List<EmojiInfo>> _emojiesByText =
+    public static readonly Dictionary<string, List<EmojiInfo>> _emojiesByText =
       new Dictionary<string, List<EmojiInfo>>();
 
-    public ThrowController(ILogger<ThrowController> logger)
+    public GetRandomEmojiController(ILogger<GetRandomEmojiController> logger)
     {
       _logger = logger;
       _logger.Log(LogLevel.Critical, "hello");
@@ -33,7 +33,7 @@ namespace SlackThrowReaction.Controllers
       Consumes("application/x-www-form-urlencoded"),
       Produces("application/json")
     ]
-    public async Task<JsonResult> Post([FromForm] SlashCommand data)
+    public async Task<JsonResult> Post([FromForm] SlashCommandPayload data)
     {
       var emoji = data.Text?.ToLower();
 
@@ -67,17 +67,17 @@ namespace SlackThrowReaction.Controllers
 
       var index = _random.Next(emojies.Count);
       var emojiInfo = emojies[index];
+      var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
 
       return new JsonResult(new
       {
         response_type = "ephemeral", //"in_channel"
-        delete_original = true,
         attachments = new[]
         {
           new
           {
             text = emojiInfo.Code,
-            image_url = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x"
+            image_url = imageUrl
           }
         },
         blocks = new []
@@ -96,8 +96,8 @@ namespace SlackThrowReaction.Controllers
                   type = "plain_text",
                   text = "Send"
                 },
-                value = "click_me_123",
-                action_id = "actionId-0"
+                value = imageUrl,
+                action_id = ActionType.Send.ToString()
               },
               new
               {
@@ -108,8 +108,8 @@ namespace SlackThrowReaction.Controllers
                   type = "plain_text",
                   text = "Shuffle"
                 },
-                value = "click_me_123",
-                action_id = "actionId-1"
+                value = emoji,
+                action_id = ActionType.Shuffle.ToString()
               },
               new
               {
@@ -120,8 +120,8 @@ namespace SlackThrowReaction.Controllers
                   type = "plain_text",
                   text = "Cancel"
                 },
-                value = "click_me_123",
-                action_id = "actionId-2"
+                value = imageUrl,
+                action_id = ActionType.Remove.ToString()
               }
             }
           }
