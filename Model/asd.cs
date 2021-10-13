@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace SlackThrowReaction.Model
@@ -65,5 +66,17 @@ namespace SlackThrowReaction.Model
     [JsonProperty("unfurl_media")] public bool UnfurlMedia { get; set; } = true;
 
     [JsonProperty("unfurl_links")] public bool UnfurlLinks { get; set; } = false;
+  }
+
+  public class EmojiInfo
+  {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+    
+    [JsonProperty("code")]
+    public string Code { get; set; }
+    
+    [JsonProperty("imageType")]
+    public string ImageType { get; set; }
   }
 }

@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using SlackThrowReaction.Model;
 
 namespace SlackThrowReaction.Controllers
@@ -13,12 +17,8 @@ namespace SlackThrowReaction.Controllers
   public class ThrowController : ControllerBase
   {
     private readonly ILogger<ThrowController> _logger;
-
-    private Dictionary<string, string> UrlByEmoji = new Dictionary<string, string>
-    {
-      {"catjam", "https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x"},
-      {"pogtasty", "https://cdn.betterttv.net/emote/5f587698e6f15f6bf457c548/3x"}
-    };
+    private static readonly Random _random = new Random();
+    private static readonly Dictionary<string, List<EmojiInfo>> _emojiesByText = new Dictionary<string, List<EmojiInfo>>();
 
     public ThrowController(ILogger<ThrowController> logger)
     {
@@ -31,11 +31,11 @@ namespace SlackThrowReaction.Controllers
       Consumes("application/x-www-form-urlencoded"),
       Produces("application/json")
     ]
-    public JsonResult Post([FromForm] SlashCommand data)
+    public async Task<JsonResult> Post([FromForm] SlashCommand data)
     {
-      var emoji = UrlByEmoji.TryGetValue(data.Text.ToString(), out var url);
-
-      if (url == null)
+      var emoji = data.Text?.ToLower();
+      
+      if (string.IsNullOrEmpty(emoji))
       {
         return new JsonResult(new
         {
@@ -43,6 +43,28 @@ namespace SlackThrowReaction.Controllers
           text = "emoji not found bruh :c"
         });
       }
+
+      if (!_emojiesByText.TryGetValue(emoji, out var emojies))
+      {
+        var apiUrl = $"https://api.betterttv.net/3/emotes/shared/search?query={emoji}&offset=0&limit=15";
+        var result = "";
+      
+        var request = (HttpWebRequest)WebRequest.Create(apiUrl);
+        request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+        using(var response = (HttpWebResponse)request.GetResponse())
+        await using(var stream = response.GetResponseStream())
+        using(var reader = new StreamReader(stream))
+        {
+          result = reader.ReadToEnd();
+        }
+
+        emojies = JsonConvert.DeserializeObject<List<EmojiInfo>>(result);
+        _emojiesByText.Add(data.Text, emojies);
+      }
+      
+      var index = _random.Next(emojies.Count);
+      var emojiInfo = emojies[index];
       
       return new JsonResult(new
       {
@@ -52,7 +74,8 @@ namespace SlackThrowReaction.Controllers
         {
           new
           {
-            image_url = url
+            text = emojiInfo.Code,
+            image_url = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x"
           }
         }
       });
