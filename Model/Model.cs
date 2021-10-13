@@ -34,6 +34,8 @@ namespace SlackThrowReaction.Model
     [JsonProperty("token")] public string Token { get; set; }
     
     [JsonProperty("response_url")] public string ResponseUrl { get; set; }
+    
+    [JsonProperty("user")] public User User { get; set; }
 
     [JsonProperty("actions")] public Action[] Actions { get; set; }
   }
@@ -45,6 +47,21 @@ namespace SlackThrowReaction.Model
     [JsonProperty("block_id")] public string BlockId { get; set; }
 
     [JsonProperty("value")] public string Value { get; set; }
+  }
+
+  public sealed class User
+  {
+    [JsonProperty("id")]
+    public string Id { get; set; }
+    
+    [JsonProperty("name")]
+    public string Name { get; set; }
+    
+    [JsonProperty("username")]
+    public string Username { get; set; }
+    
+    [JsonProperty("team_id")]
+    public string TeamId { get; set; }
   }
 
   public sealed class SlackReply

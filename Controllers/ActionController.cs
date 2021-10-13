@@ -48,11 +48,19 @@ namespace SlackThrowReaction.Controllers
         {
           response_type = "in_channel", //"in_channel"
           delete_original = "true",
-          attachments = new[]
+          blocks = new[]
           {
             new
             {
-              image_url = imageUrl
+              type = "image",
+              title = new
+              {
+                type = "plain_text",
+                text = $"{payload.User.Name} reacts as KEKW"
+              },
+              block_id = "image4",
+              image_url = imageUrl,
+              alt_text = $"{payload.User.Name} reacts as KEKW"
             }
           }
         };
@@ -70,11 +78,13 @@ namespace SlackThrowReaction.Controllers
         {
           text = "emojiInfo.Code",
           replace_original = "true",
-          attachments = new[]
+          blocks = new[]
           {
             new
             {
-              image_url = imageUrl
+              type = "image",
+              image_url = imageUrl,
+              alt_text = "images"
             }
           }
         };
