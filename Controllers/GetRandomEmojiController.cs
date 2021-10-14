@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using SlackThrowReaction.Model;
+using SlackThrowReaction.ResponseElements;
 
 namespace SlackThrowReaction.Controllers
 {
@@ -48,14 +49,14 @@ namespace SlackThrowReaction.Controllers
 
       if (!_emojiesByText.TryGetValue(emoji, out var emojies))
       {
-        var apiUrl = $"https://api.betterttv.net/3/emotes/shared/search?query={emoji}&offset=0&limit=15";
+        var apiUrl = $"https://api.betterttv.net/3/emotes/shared/search?query={emoji}&offset=0&limit=30";
         var result = "";
 
         var request = (HttpWebRequest) WebRequest.Create(apiUrl);
         request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-        using (var response = (HttpWebResponse) request.GetResponse())
-        await using (var stream = response.GetResponseStream())
+        using (var webResponse = (HttpWebResponse) request.GetResponse())
+        await using (var stream = webResponse.GetResponseStream())
         using (var reader = new StreamReader(stream))
         {
           result = reader.ReadToEnd();
@@ -76,61 +77,8 @@ namespace SlackThrowReaction.Controllers
         response_type = "ephemeral", //"in_channel"
         blocks = new object[]
         {
-          new
-          {
-            type = "actions",
-            elements = new object[]
-            {
-              new
-              {
-                type = "button",
-                style = "primary",
-                text = new
-                {
-                  type = "plain_text",
-                  text = "Send"
-                },
-                value = imageDataJson,
-                action_id = ActionType.Send.ToString()
-              },
-              new
-              {
-                type = "button",
-                style = "primary",
-                text = new
-                {
-                  type = "plain_text",
-                  text = "Shuffle"
-                },
-                value = imageDataJson,
-                action_id = ActionType.Shuffle.ToString()
-              },
-              new
-              {
-                type = "button",
-                style = "danger",
-                text = new
-                {
-                  type = "plain_text",
-                  text = "Cancel"
-                },
-                value = imageDataJson,
-                action_id = ActionType.Remove.ToString()
-              }
-            }
-          },
-          new
-          {
-            type = "image",
-            title = new
-            {
-              type = "plain_text",
-              text = emojiInfo.Code
-            },
-            block_id = "image4",
-            image_url = imageUrl,
-            alt_text = emojiInfo.Code
-          }
+          MakeSlackResponse.MakeButtonsBlock(imageDataJson),
+          MakeSlackResponse.MakeImageBlock(emojiInfo.Code, imageUrl)
         }
       });
     }
