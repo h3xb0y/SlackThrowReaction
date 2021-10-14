@@ -42,7 +42,7 @@ namespace SlackThrowReaction.Controllers
       if (imageData == null)
         throw new Exception($"Image data cannot be null! Json is {imageDataJson}");
 
-      object response = null;
+      object? response = null;
 
       if (action.ActionId == ActionType.Send.ToString())
       {
@@ -66,23 +66,37 @@ namespace SlackThrowReaction.Controllers
       else if (action.ActionId == ActionType.Shuffle.ToString())
       {
         var emojiInfo = await EmojiStorage.Get(imageData.SearchingEmoji);
-        var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
-        imageData.Emoji = emojiInfo.Code;
-        imageData.IconUrl = imageUrl;
-        imageDataJson = JsonConvert.SerializeObject(imageData);
-        
-        response = new
+        if (emojiInfo == null)
         {
-          text = "emojiInfo.Code",
-          replace_original = "true",
-          blocks = new object[]
+          response =  new JsonResult(new
           {
-            SlackResponseManager.MakeButtonsBlock(imageDataJson),
-            SlackResponseManager.MakeImageBlock(emojiInfo.Code, imageUrl)
-          }
-        };
+            response_type = "ephemeral",
+            text = "emoji not found"
+          });
+        }
+        else
+        {
+          var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
+          imageData.Emoji = emojiInfo.Code;
+          imageData.IconUrl = imageUrl;
+          imageDataJson = JsonConvert.SerializeObject(imageData);
+        
+          response = new
+          {
+            text = "emojiInfo.Code",
+            replace_original = "true",
+            blocks = new object[]
+            {
+              SlackResponseManager.MakeButtonsBlock(imageDataJson),
+              SlackResponseManager.MakeImageBlock(emojiInfo.Code, imageUrl)
+            }
+          };
+        }
       }
 
+      if (response == null)
+        throw new Exception("Unknown request");
+      
       Call(payload.ResponseUrl, response);
     }
 

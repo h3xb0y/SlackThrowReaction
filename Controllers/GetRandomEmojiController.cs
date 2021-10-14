@@ -39,13 +39,13 @@ namespace SlackThrowReaction.Controllers
       var emojiInfo = await EmojiStorage.Get(emoji);
       if (emojiInfo == null)
       {
-        
         return new JsonResult(new
         {
           response_type = "ephemeral",
           text = "emoji not found"
         });
       }
+      
       var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
       var imageData = new ImageData {Emoji = emojiInfo.Code, IconUrl = imageUrl, SearchingEmoji = emoji};
       var imageDataJson = JsonConvert.SerializeObject(imageData);
