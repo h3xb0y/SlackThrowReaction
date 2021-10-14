@@ -12,15 +12,14 @@ namespace SlackThrowReaction.ResponseElements
   {
     private static readonly Random Random = new Random();
 
-    private static readonly Dictionary<string, List<EmojiInfo>> EmojiesByText =
-      new Dictionary<string, List<EmojiInfo>>();
+    private static readonly Dictionary<string, List<EmojiInfo>> EmojiesByText = new();
 
-    public static async Task<EmojiInfo> Get(string emoji, bool force = false)
+    public static async Task<EmojiInfo?> Get(string emoji, bool force = false)
     {
       if (!EmojiesByText.TryGetValue(emoji, out var emojies))
       {
         var apiUrl = $"https://api.betterttv.net/3/emotes/shared/search?query={emoji}&offset=0&limit=30";
-        var result = "";
+        string result;
 
         var request = (HttpWebRequest) WebRequest.Create(apiUrl);
         request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -36,10 +35,10 @@ namespace SlackThrowReaction.ResponseElements
 
         if (emojies == null)
           return null;
-        
+
         EmojiesByText.Add(emoji, emojies);
       }
-      
+
       var index = Random.Next(emojies.Count);
       var emojiInfo = emojies[index];
 

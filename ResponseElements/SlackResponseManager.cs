@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using SlackThrowReaction.Model;
+﻿using SlackThrowReaction.Model;
 
 namespace SlackThrowReaction.ResponseElements
 {

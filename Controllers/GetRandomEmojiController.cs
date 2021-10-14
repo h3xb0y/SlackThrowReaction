@@ -11,8 +11,11 @@ namespace SlackThrowReaction.Controllers
   [Route("[controller]")]
   public class GetRandomEmojiController : ControllerBase
   {
-    public GetRandomEmojiController(ILogger<GetRandomEmojiController> _)
+    private readonly ILogger<GetRandomEmojiController> _logger;
+    
+    public GetRandomEmojiController(ILogger<GetRandomEmojiController> logger)
     {
+      _logger = logger;
     }
 
     [
@@ -22,18 +25,27 @@ namespace SlackThrowReaction.Controllers
     ]
     public async Task<JsonResult> Post([FromForm] SlashCommandPayload data)
     {
-      var emoji = data.Text?.ToLower();
+      var emoji = data.Text.ToLower();
 
       if (string.IsNullOrEmpty(emoji))
       {
         return new JsonResult(new
         {
           response_type = "ephemeral",
-          text = "emoji not found bruh :c"
+          text = "your input is incorrect"
         });
       }
 
       var emojiInfo = await EmojiStorage.Get(emoji);
+      if (emojiInfo == null)
+      {
+        
+        return new JsonResult(new
+        {
+          response_type = "ephemeral",
+          text = "emoji not found"
+        });
+      }
       var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
       var imageData = new ImageData {Emoji = emojiInfo.Code, IconUrl = imageUrl, SearchingEmoji = emoji};
       var imageDataJson = JsonConvert.SerializeObject(imageData);
