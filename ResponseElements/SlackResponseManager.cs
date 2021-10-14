@@ -3,7 +3,7 @@ using SlackThrowReaction.Model;
 
 namespace SlackThrowReaction.ResponseElements
 {
-  public static class MakeSlackResponse
+  public static class SlackResponseManager
   {
     public static dynamic MakeImageBlock(string text, string url)
     {

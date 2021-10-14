@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,16 +11,8 @@ namespace SlackThrowReaction.Controllers
   [Route("[controller]")]
   public class GetRandomEmojiController : ControllerBase
   {
-    private readonly ILogger<GetRandomEmojiController> _logger;
-    public static readonly Random _random = new Random();
-
-    public static readonly Dictionary<string, List<EmojiInfo>> _emojiesByText =
-      new Dictionary<string, List<EmojiInfo>>();
-
-    public GetRandomEmojiController(ILogger<GetRandomEmojiController> logger)
+    public GetRandomEmojiController(ILogger<GetRandomEmojiController> _)
     {
-      _logger = logger;
-      _logger.Log(LogLevel.Critical, "hello");
     }
 
     [
@@ -47,38 +33,18 @@ namespace SlackThrowReaction.Controllers
         });
       }
 
-      if (!_emojiesByText.TryGetValue(emoji, out var emojies))
-      {
-        var apiUrl = $"https://api.betterttv.net/3/emotes/shared/search?query={emoji}&offset=0&limit=30";
-        var result = "";
-
-        var request = (HttpWebRequest) WebRequest.Create(apiUrl);
-        request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-        using (var webResponse = (HttpWebResponse) request.GetResponse())
-        await using (var stream = webResponse.GetResponseStream())
-        using (var reader = new StreamReader(stream))
-        {
-          result = reader.ReadToEnd();
-        }
-
-        emojies = JsonConvert.DeserializeObject<List<EmojiInfo>>(result);
-        _emojiesByText.Add(data.Text, emojies);
-      }
-
-      var index = _random.Next(emojies.Count);
-      var emojiInfo = emojies[index];
+      var emojiInfo = await EmojiStorage.Get(emoji);
       var imageUrl = $"https://cdn.betterttv.net/emote/{emojiInfo.Id}/3x";
       var imageData = new ImageData {Emoji = emojiInfo.Code, IconUrl = imageUrl, SearchingEmoji = emoji};
       var imageDataJson = JsonConvert.SerializeObject(imageData);
 
       return new JsonResult(new
       {
-        response_type = "ephemeral", //"in_channel"
+        response_type = "ephemeral",
         blocks = new object[]
         {
-          MakeSlackResponse.MakeButtonsBlock(imageDataJson),
-          MakeSlackResponse.MakeImageBlock(emojiInfo.Code, imageUrl)
+          SlackResponseManager.MakeButtonsBlock(imageDataJson),
+          SlackResponseManager.MakeImageBlock(emojiInfo.Code, imageUrl)
         }
       });
     }
