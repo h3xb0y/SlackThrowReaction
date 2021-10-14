@@ -14,7 +14,7 @@ namespace SlackThrowReaction.ResponseElements
 
     private static readonly Dictionary<string, List<EmojiInfo>> EmojiesByText = new();
 
-    public static async Task<EmojiInfo?> Get(string emoji, bool force = false)
+    public static async Task<EmojiInfo> Get(string emoji, bool force = false)
     {
       if (!EmojiesByText.TryGetValue(emoji, out var emojies))
       {
